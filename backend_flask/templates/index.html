@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Evaluator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h2, h3 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        .response-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 20px;
+        }
+        .score-card {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .score {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px;
+            width: 200px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload Your Resume (PDF)</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" accept=".pdf" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h3>ATS Match Percentage:</h3>
+    <div class="response-box" id="atsResponse">Pending...</div>
+
+    <h3>HR Feedback:</h3>
+    <div class="response-box" id="hrResponse">Pending...</div>
+
+    <h3>Section Compatibility Scores:</h3>
+    <div class="score-card" id="sectionScores"></div>
+
+    <script>
+        document.getElementById("uploadForm").onsubmit = async function(event) {
+            event.preventDefault();
+            let fileInput = document.getElementById("fileInput").files[0];
+            let formData = new FormData();
+            formData.append("file", fileInput);
+
+            let response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            let result = await response.json();
+            
+            document.getElementById("atsResponse").innerText = result.ATS_Match_Percentage;
+            document.getElementById("hrResponse").innerHTML = result.HR_Feedback.replace(/\n/g, "<br>");
+            
+            let sectionScoresDiv = document.getElementById("sectionScores");
+            sectionScoresDiv.innerHTML = "";
+            for (let [section, score] of Object.entries(result.Section_Scores)) {
+                let scoreElement = document.createElement("div");
+                scoreElement.classList.add("score");
+                scoreElement.innerText = `${section}: ${score}/10`;
+                sectionScoresDiv.appendChild(scoreElement);
+            }
+        };
+    </script>
+</body>
+</html>
